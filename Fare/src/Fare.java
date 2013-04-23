@@ -17,6 +17,7 @@ public class Fare implements Runnable {
     public static void main(String[] args) {
         new Thread(new Fare()).start();
     }
+
     public void run() {
         try {
             in = new BufferedReader(new FileReader("bfsrev.in"));
@@ -62,10 +63,9 @@ public class Fare implements Runnable {
             to = nextInt();
             if (vertices[to] == 0) {
                 vertices[to] = i;
-            }
-            else {
+            } else {
                 int next = vertices[to];
-                while (adjacency[1][next] != 0){
+                while (adjacency[1][next] != 0) {
                     next = adjacency[1][next];
                 }
                 adjacency[1][next] = i;
@@ -75,9 +75,9 @@ public class Fare implements Runnable {
         v = new boolean[vertex + 1];
         dist = new int[vertex + 1];
 
-        for(int i = 1; i <= vertex; i++) dist[i] = -1;
+        for (int i = 1; i <= vertex; i++) dist[i] = -1;
         bfs();
-        for(int i = 1; i <= vertex; i++) {
+        for (int i = 1; i <= vertex; i++) {
             out.print(dist[i] + " ");
         }
         out.close();
