@@ -4,7 +4,7 @@ import java.util.StringTokenizer;
 
 public class GraphGame implements Runnable {
     final static int MAX_VERTICES = 100000;
-    final static int MAX_EDGES = 1000000;
+    final static int MAX_EDGES = 100000;
     final static int[][] adjacency = new int[3][MAX_VERTICES + MAX_EDGES + 1];
     final static int[] colorVertex = new int[MAX_VERTICES + 1];
 
