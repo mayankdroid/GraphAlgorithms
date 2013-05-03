@@ -9,7 +9,7 @@ public class Function implements Runnable {
     PrintWriter out;
 
     long mod = 1L << 32;
-    HashMap<Integer, Integer> result = new HashMap<Integer, Integer>(1000);
+    HashMap<Integer, Long> result = new HashMap<Integer, Long>(1000);
 
     public static void main(String[] args) {
         new Thread(new Function()).start();
@@ -50,27 +50,27 @@ public class Function implements Runnable {
 
     void solve() throws NumberFormatException, IOException {
         int arg = nextInt();
-        int res = function(arg);
+        long res = function(arg);
         out.print(res);
     }
 
-    private int function(int arg) {
+    private long function(int arg) {
         if (arg <= 2) return 1;
         if (arg % 2 == 0) {
             int a = arg - 1;
             int b = arg - 3;
-            return (int) ((calculate(a) + calculate(b)) % mod);
+            return (calculate(a) + calculate(b)) % mod;
         }
         if (arg % 2 == 1) {
             int a = (int) Math.floor((6f * arg / 7f));
             int b = (int) Math.floor(2f * arg / 3f);
-            return (int) ((calculate(a) + calculate(b)) % mod);
+            return (calculate(a) + calculate(b)) % mod;
         }
         return 0;
     }
 
     private long calculate(int a) {
-        int resA;
+        long resA;
         if (result.containsKey(a)) {
             resA = result.get(a);
         } else {
