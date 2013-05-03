@@ -6,8 +6,32 @@ public class Paths implements Runnable {
     StringTokenizer st;
     BufferedReader in;
     PrintWriter out;
-    static int seats;
-    static int[] F;
+
+    private final long[] paths = new long[]{
+            1,
+            4,
+            12,
+            36,
+            100,
+            284,
+            780,
+            2172,
+            5916,
+            16268,
+            44100,
+            120292,
+            324932,
+            881500,
+            2374444,
+            6416596,
+            17245332,
+            46466676,
+            124658732,
+            335116620,
+            897697164,
+            2408806028L,
+            6444560484L
+    };
 
     public static void main(String[] args) {
         new Thread(new Paths()).start();
@@ -15,8 +39,8 @@ public class Paths implements Runnable {
 
     public void run() {
         try {
-            in = new BufferedReader(new FileReader("comfort.in"));
-            out = new PrintWriter(new FileWriter("comfort.out"));
+            in = new BufferedReader(new FileReader("paths.in"));
+            out = new PrintWriter(new FileWriter("paths.out"));
             solve();
         } catch (Exception e) {
             e.printStackTrace();
@@ -47,5 +71,13 @@ public class Paths implements Runnable {
     }
 
     void solve() throws NumberFormatException, IOException {
+        try {
+            while (true) {
+                int a = nextInt();
+                out.print(paths[a]);
+            }
+        } catch (Exception e) {
+        }
+
     }
 }
