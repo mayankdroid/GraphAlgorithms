@@ -55,15 +55,15 @@ public class Function implements Runnable {
     }
 
     private int function(int arg) {
-        if (arg <= 2) return 2;
+        if (arg <= 2) return 1;
         if (arg % 2 == 0) {
             int a = arg - 1;
             int b = arg - 3;
             return (int) ((calculate(a) + calculate(b)) % mod);
         }
         if (arg % 2 == 1) {
-            int a = (int) Math.floor((6d * arg / 7d));
-            int b = (int) Math.floor(2d * arg / 3d);
+            int a = (int) Math.floor((6f * arg / 7f));
+            int b = (int) Math.floor(2f * arg / 3f);
             return (int) ((calculate(a) + calculate(b)) % mod);
         }
         return 0;
