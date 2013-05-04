@@ -1,4 +1,5 @@
 import java.io.*;
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.StringTokenizer;
 
@@ -8,8 +9,10 @@ public class Function implements Runnable {
     BufferedReader in;
     PrintWriter out;
 
-    long mod = 1L << 32;
-    HashMap<Integer, Long> result = new HashMap<Integer, Long>(1000);
+    final BigInteger MOD = BigInteger.valueOf(1l << 32);
+    HashMap<Long, BigInteger> result = new HashMap<Long, BigInteger>(100000);
+    final BigInteger ZERO = BigInteger.valueOf(0);
+    final BigInteger ONE = BigInteger.valueOf(1);
 
     public static void main(String[] args) {
         new Thread(new Function()).start();
@@ -49,28 +52,32 @@ public class Function implements Runnable {
     }
 
     void solve() throws NumberFormatException, IOException {
-        int arg = nextInt();
-        long res = function(arg);
-        out.print(res);
+        long arg = nextLong();
+        //for(long arg = 1; arg <= 100000; arg++) {
+        BigInteger res = function(arg);
+        out.println(res.mod(MOD));
+        //}
     }
 
-    private long function(int arg) {
-        if (arg <= 2) return 1;
+    private BigInteger function(long arg) {
+        if (arg <= 2) return ONE;
         if (arg % 2 == 0) {
-            int a = arg - 1;
-            int b = arg - 3;
-            return (calculate(a) + calculate(b)) % mod;
+            BigInteger tempA = calculate(arg - 1);
+            BigInteger tempB = calculate(arg - 3);
+            return tempA.add(tempB);
         }
         if (arg % 2 == 1) {
-            int a = (int) Math.floor((6f * arg / 7f));
-            int b = (int) Math.floor(2f * arg / 3f);
-            return (calculate(a) + calculate(b)) % mod;
+            long a = (long) Math.floor(6 * (double) arg / 7);
+            long b = (long) Math.floor(2 * (double) arg / 3);
+            BigInteger tempA = calculate(a);
+            BigInteger tempB = calculate(b);
+            return tempA.add(tempB);
         }
-        return 0;
+        return ZERO;
     }
 
-    private long calculate(int a) {
-        long resA;
+    private BigInteger calculate(long a) {
+        BigInteger resA;
         if (result.containsKey(a)) {
             resA = result.get(a);
         } else {
