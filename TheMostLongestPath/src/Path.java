@@ -19,7 +19,7 @@ public class Path implements Runnable {
 
     static int vertices, edges, neededLength = 0;
 
-    List<Integer> startVertices = new LinkedList<Integer>();
+    int[] startVertices = new int[MAX_VERTICES + 1];
 
     public static void main(String[] args) {
         new Thread(new Path()).start();
@@ -62,30 +62,34 @@ public class Path implements Runnable {
         vertices = nextInt();
         edges = nextInt();
         readAdjacencyList();
-        for (int i = 1; i <= vertices; i++) {
-            startVertices.add(i);
-        }
-        while (!startVertices.isEmpty()) {
+        startVertices[0] = vertices;
+        while (startVertices[0] > 1 && neededLength < vertices) {
             neededLength++;
-            Iterator index = startVertices.iterator();
-            while (index.hasNext()) {
-                Integer startVertex = (Integer) index.next();
-                if (!dfs(startVertex, 0)) {
-                    index.remove();
+            for (int i = 1; i <= vertices; i++) {
+                if (startVertices[i] != 0) {
+                    continue;
+                }
+                if (!dfs(i, 0)) {
+                    startVertices[i] = 1;
                 } else {
+                    longestPath[0] = neededLength;
                     break;
                 }
             }
         }
-        out.println(neededLength - 1);
-        for (int i = 0; i <= neededLength - 1; i++) {
+        out.println(longestPath[0]);
+        for (int i = 1; i <= longestPath[0] + 1; i++) {
             out.print(longestPath[i] + " ");
         }
     }
 
     private boolean dfs(int vertex, int length) {
         if (length == neededLength) {
-            longestPath[length] = vertex;
+            if (startVertices[vertex] == 0) {
+                startVertices[0]--;
+                startVertices[vertex] = 1;
+            }
+            longestPath[length + 1] = vertex;
             return true;
         }
         colorVertex[vertex] = 1;
@@ -94,11 +98,15 @@ public class Path implements Runnable {
             index = adjacency[1][index];
             if (colorVertex[adjacency[0][index]] == 0) {
                 if (dfs(adjacency[0][index], length + 1) == true) {
-                    longestPath[length] = vertex;
+                    longestPath[length + 1] = vertex;
                     colorVertex[vertex] = 0;
                     return true;
                 }
             }
+        }
+        if (startVertices[vertex] == 0) {
+            startVertices[0]--;
+            startVertices[vertex] = 1;
         }
         colorVertex[vertex] = 0;
         return false;
