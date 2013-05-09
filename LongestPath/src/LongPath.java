@@ -16,8 +16,8 @@ public class LongPath implements Runnable {
     final int[][] adjacency = new int[3][MAX_VERTICES + MAX_EDGES + 1];
     final int[] colorVertex = new int[MAX_VERTICES + 1];
 
-    static int vertices, edges, neededLength = 0;
-    List<Integer> startVertices = new LinkedList<Integer>();
+    static int vertices, edges, neededLength = 0, currentBeginVertices, longPath;
+    int[] startVertices = new int[MAX_VERTICES + 1];
 
     public static void main(String[] args) {
         new Thread(new LongPath()).start();
@@ -59,27 +59,29 @@ public class LongPath implements Runnable {
     void solve() throws NumberFormatException, IOException {
         vertices = nextInt();
         edges = nextInt();
+        currentBeginVertices = vertices;
         readAdjacencyList();
-        for (int i = 1; i <= vertices; i++) {
-            startVertices.add(i);
-        }
-        while (!startVertices.isEmpty() || neededLength > vertices) {
+        while (currentBeginVertices > 1 && neededLength < vertices) {
             neededLength++;
-            Iterator index = startVertices.iterator();
-            while (index.hasNext()) {
-                Integer startVertex = (Integer) index.next();
-                if (!dfs(startVertex, 0)) {
-                    index.remove();
-                } else {
+            for (int i = 1; i <= vertices; i++) {
+                if (startVertices[i] != 0) {
+                    continue;
+                }
+                if (dfs(i, 0)) {
+                    longPath = neededLength;
                     break;
                 }
             }
         }
-        out.println(neededLength - 1);
+        out.println(longPath);
     }
 
     private boolean dfs(int vertex, int length) {
         if (length == neededLength) {
+            if (startVertices[vertex] == 0) {
+                currentBeginVertices--;
+                startVertices[vertex] = 1;
+            }
             return true;
         }
         int index = vertex;
@@ -88,6 +90,10 @@ public class LongPath implements Runnable {
             if (dfs(adjacency[0][index], length + 1) == true) {
                 return true;
             }
+        }
+        if (startVertices[vertex] == 0) {
+            currentBeginVertices--;
+            startVertices[vertex] = 1;
         }
         return false;
     }

@@ -69,9 +69,7 @@ public class Path implements Runnable {
                 if (startVertices[i] != 0) {
                     continue;
                 }
-                if (!dfs(i, 0)) {
-                    startVertices[i] = 1;
-                } else {
+                if (dfs(i, 0)) {
                     longestPath[0] = neededLength;
                     break;
                 }
