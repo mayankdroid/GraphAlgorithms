@@ -7,6 +7,7 @@ public class GraphGame implements Runnable {
     final int MAX_EDGES = 100000;
     final int[][] adjacency = new int[3][MAX_VERTICES + MAX_EDGES + 1];
     final int[] colorVertex = new int[MAX_VERTICES + 1];
+    final int[] typeOfVertex = new int[MAX_VERTICES + 1];
 
     StringTokenizer st;
     BufferedReader in;
@@ -54,26 +55,18 @@ public class GraphGame implements Runnable {
     void solve() throws NumberFormatException, IOException {
         int testN = 0;
         while (true) {
-            try {
-                int startVertex, edgeCounter = 0;
-                vertices = nextInt();
-                if (vertices == 0) break;
-                edges = nextInt();
-                startVertex = nextInt();
-                testN++;
-                edgeCounter = readAdjacencyList();
-                if (graphHasObviousCycle(vertices, edges, edgeCounter)) {
-                    out.print("Players can avoid first player winning in game " + testN + ".\n");
-                } else {
-                    cc += 2;
-                    if (getWinner(startVertex) == 1) {
-                        out.print("First player always wins in game " + testN + ".\n");
-                    } else {
-                        out.print("Players can avoid first player winning in game " + testN + ".\n");
-                    }
-                }
-            } catch (Exception e) {
-                break;
+            int startVertex;
+            vertices = nextInt();
+            if (vertices == 0) break;
+            edges = nextInt();
+            startVertex = nextInt();
+            testN++;
+            readAdjacencyList();
+            cc += 2;
+            if (getWinner(startVertex) == 1) {
+                out.print("First player always wins in game " + testN + ".\n");
+            } else {
+                out.print("Players can avoid first player winning in game " + testN + ".\n");
             }
         }
     }
@@ -89,12 +82,21 @@ public class GraphGame implements Runnable {
         while (adjacency[1][index] != 0) {
             index = adjacency[1][index];
             if (colorVertex[adjacency[0][index]] <= cc - 2) {
-                if (dfs(adjacency[0][index], nextLevel) == 2) return 2;
+                if (dfs(adjacency[0][index], nextLevel) == 2) {
+                    return 2;
+                }
             } else {
                 if (colorVertex[adjacency[0][index]] == cc - 1) {
                     return 2;
                 }
-                if (adjacency[1][adjacency[0][index]] == 0 && nextLevel % 2 == 0) { /* Don't have any outcoming edges from next vertex */
+                if (adjacency[1][adjacency[0][index]] == 0) { /* Don't have any outcoming edges from next vertex */
+                    if (nextLevel % 2 == 0) {
+                        return 2;
+                    } else {
+                        continue;
+                    }
+                }
+                if (typeOfVertex[adjacency[0][index]] == 1 + (startLevel % 2)) {
                     return 2;
                 }
             }
@@ -103,14 +105,11 @@ public class GraphGame implements Runnable {
             return 2;
         }
         colorVertex[startVertex] = cc;
+        typeOfVertex[startVertex] = 1 + (startLevel % 2);
         return 1;
     }
 
-    private boolean graphHasObviousCycle(int vertices, int edges, int edgeCounter) {
-        return (edges - edgeCounter) == vertices ? true : false;
-    }
-
-    int readAdjacencyList() throws NumberFormatException, IOException {
+    void readAdjacencyList() throws NumberFormatException, IOException {
         int from, to, moreThanOneEdgeCounter = 0;
         for (int i = 1; i <= vertices + edges; i++) {
             adjacency[0][i] = i;
@@ -120,11 +119,9 @@ public class GraphGame implements Runnable {
         for (int i = vertices + 1; i <= vertices + edges; i++) {
             from = nextInt();
             to = nextInt();
-            if (adjacency[2][from] > vertices) moreThanOneEdgeCounter++;
             adjacency[1][adjacency[2][from]] = i;
             adjacency[2][from] = i;
             adjacency[0][i] = to;
         }
-        return moreThanOneEdgeCounter;
     }
 }
