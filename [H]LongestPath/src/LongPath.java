@@ -17,7 +17,7 @@ public class LongPath implements Runnable {
     final int[] colorVertex = new int[MAX_VERTICES + 1];
 
     static int vertices, edges, neededLength = 0, currentBeginVertices, longPath;
-    int[] startVertices = new int[MAX_VERTICES + 1];
+    int[] maxPathFrom = new int[MAX_VERTICES + 1];
 
     public static void main(String[] args) {
         new Thread(new LongPath()).start();
@@ -59,43 +59,28 @@ public class LongPath implements Runnable {
     void solve() throws NumberFormatException, IOException {
         vertices = nextInt();
         edges = nextInt();
-        currentBeginVertices = vertices;
+        longPath = 0;
         readAdjacencyList();
-        while (currentBeginVertices > 1 && neededLength < vertices) {
-            neededLength++;
-            for (int i = 1; i <= vertices; i++) {
-                if (startVertices[i] != 0) {
-                    continue;
-                }
-                if (dfs(i, 0)) {
-                    longPath = neededLength;
-                    break;
-                }
+        for (int i = 1; i <= vertices; i++) {
+            if (maxPathFrom[i] == 0) {
+                dfs(i, 0);
+                longPath = Math.max(longPath, maxPathFrom[i]);
             }
         }
         out.println(longPath);
     }
 
-    private boolean dfs(int vertex, int length) {
-        if (length == neededLength) {
-            if (startVertices[vertex] == 0) {
-                currentBeginVertices--;
-                startVertices[vertex] = 1;
-            }
-            return true;
-        }
-        int index = vertex;
+    private void dfs(int vertex, int length) {
+        int index = vertex, maxPathFromCurrentVertex = 0;
         while (adjacency[1][index] != 0) {
             index = adjacency[1][index];
-            if (dfs(adjacency[0][index], length + 1) == true) {
-                return true;
+            if (maxPathFrom[adjacency[0][index]] == 0) {
+                dfs(adjacency[0][index], length + 1);
+                maxPathFromCurrentVertex = Math.max(maxPathFromCurrentVertex, maxPathFrom[adjacency[0][index]] + 1);
             }
+            maxPathFromCurrentVertex = Math.max(maxPathFromCurrentVertex, maxPathFrom[adjacency[0][index]] + 1);
         }
-        if (startVertices[vertex] == 0) {
-            currentBeginVertices--;
-            startVertices[vertex] = 1;
-        }
-        return false;
+        maxPathFrom[vertex] = maxPathFromCurrentVertex;
     }
 
     void readAdjacencyList() throws NumberFormatException, IOException {
