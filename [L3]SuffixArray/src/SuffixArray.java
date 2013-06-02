@@ -1,6 +1,5 @@
 import java.io.*;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.StringTokenizer;
 
 
@@ -9,8 +8,15 @@ public class SuffixArray implements Runnable {
     BufferedReader in;
     PrintWriter out;
 
-    private final int[] rank = new int[100000];
-    private final Long[] rank2 = new Long[100000];
+    private final int MAX_LENGTH = 100000;
+    private final int ALPHABET_HIGH = 127;
+    private final int ALPHABET_LOW = 10;
+
+    private final int[] permutation = new int[MAX_LENGTH + 1];
+    private final int[] nPermutation = new int[MAX_LENGTH + 1];
+    private final int[] counter = new int[MAX_LENGTH + 1];
+    private final int[] nEquivalenceClasses = new int[MAX_LENGTH + 1];
+    private int[] equivalenceClasses = new int[MAX_LENGTH + 1];
 
     public static void main(String[] args) {
         new Thread(new SuffixArray()).start();
@@ -32,7 +38,9 @@ public class SuffixArray implements Runnable {
 
     String nextToken() throws IOException {
         while (st == null || !st.hasMoreTokens()) {
-            st = new StringTokenizer(in.readLine());
+            String line = in.readLine();
+            if (line == null) return "";
+            st = new StringTokenizer(line);
         }
         return st.nextToken("");
     }
@@ -50,42 +58,52 @@ public class SuffixArray implements Runnable {
     }
 
     void solve() throws NumberFormatException, IOException {
-        CharSequence string = nextToken();
-        Integer[] suffixArray = suffixArray(string);
-        for (int i = 0; i < string.length(); i++) {
-            out.print(suffixArray[i] + " ");
+        StringBuilder string = new StringBuilder(nextToken());
+        string.append('\n');
+        int[] suffixArray = suffixArray(string.toString());
+        for (int i = 1; i < string.length(); i++) {
+            out.print(suffixArray[i] + 1 + " ");
         }
     }
 
-    private Integer[] suffixArray(CharSequence s) {
-        int n = s.length();
-        Integer[] sa = new Integer[n];
-        for (int i = 0; i < n; i++) {
-            sa[i] = i;
-            rank[i] = s.charAt(i);
+    private int[] suffixArray(String s) {
+        int strLen = s.length();
+        for (int i = 0; i < strLen; ++i)
+            ++counter[s.charAt(i)];
+        for (int i = ALPHABET_LOW; i <= ALPHABET_HIGH; ++i)
+            counter[i] += counter[i - 1];
+        for (int i = 0; i < strLen; ++i)
+            permutation[--counter[s.charAt(i)]] = i;
+        equivalenceClasses[permutation[0]] = 0;
+        int classes = 1;
+        for (int i = 1; i < strLen; ++i) {
+            if (s.charAt(permutation[i]) != s.charAt(permutation[i - 1])) {
+                ++classes;
+            }
+            equivalenceClasses[permutation[i]] = classes - 1;
         }
-        for (int len = 1; len < n; len *= 2) {
-            for (int i = 0; i < n; i++)
-                rank2[i] = ((long) rank[i] << 32) + (i + len < n ? rank[i + len] + 1 : 0);
-
-            Arrays.sort(sa, new RankComparator());
-
-            for (int i = 0; i < n; i++)
-                rank[sa[i]] = i > 0 && rank2[sa[i - 1]] == rank2[sa[i]] ? rank[sa[i - 1]] : i;
+        for (int h = 0; (1 << h) < strLen; ++h) {
+            for (int i = 0; i < strLen; ++i) {
+                nPermutation[i] = permutation[i] - (1 << h);
+                if (nPermutation[i] < 0) nPermutation[i] += strLen;
+            }
+            Arrays.fill(counter, 0, classes, 0);
+            for (int i = 0; i < strLen; ++i)
+                ++counter[equivalenceClasses[nPermutation[i]]];
+            for (int i = 1; i < classes; ++i)
+                counter[i] += counter[i - 1];
+            for (int i = strLen - 1; i >= 0; --i)
+                permutation[--counter[equivalenceClasses[nPermutation[i]]]] = nPermutation[i];
+            nEquivalenceClasses[permutation[0]] = 0;
+            classes = 1;
+            for (int i = 1; i < strLen; ++i) {
+                int mid1 = (permutation[i] + (1 << h)) % strLen, mid2 = (permutation[i - 1] + (1 << h)) % strLen;
+                if (equivalenceClasses[permutation[i]] != equivalenceClasses[permutation[i - 1]] || equivalenceClasses[mid1] != equivalenceClasses[mid2])
+                    ++classes;
+                nEquivalenceClasses[permutation[i]] = classes - 1;
+            }
+            equivalenceClasses = Arrays.copyOf(nEquivalenceClasses, strLen);
         }
-        return sa;
-    }
-
-    private class RankComparator implements Comparator<Integer> {
-        @Override
-        public int compare(Integer a, Integer b) {
-            if (rank2[a] == null || rank2[b] == null)
-                return 0;
-            if (rank2[a] > rank2[b])
-                return 1;
-            if (rank2[b] > rank2[a])
-                return -1;
-            return 0;
-        }
+        return permutation;
     }
 }
