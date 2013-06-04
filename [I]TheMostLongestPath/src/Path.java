@@ -1,7 +1,5 @@
 import java.io.*;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Arrays;
 import java.util.StringTokenizer;
 
 
@@ -12,14 +10,6 @@ public class Path implements Runnable {
 
     final int MAX_VERTICES = 22;
     final int MAX_EDGES = 1000;
-
-    final int[][] adjacency = new int[3][MAX_VERTICES + MAX_EDGES + 1];
-    final int[] colorVertex = new int[MAX_VERTICES + 1];
-    final int[] longestPath = new int[MAX_VERTICES + 1];
-
-    static int vertices, edges, neededLength = 0;
-
-    int[] startVertices = new int[MAX_VERTICES + 1];
 
     public static void main(String[] args) {
         new Thread(new Path()).start();
@@ -58,56 +48,59 @@ public class Path implements Runnable {
         return Double.parseDouble(nextToken());
     }
 
+    final int[][] adjacency = new int[4][MAX_VERTICES + MAX_EDGES + 1];
+    final boolean[] colorVertex = new boolean[MAX_VERTICES + 1];
+    final boolean[] color1 = new boolean[MAX_VERTICES + 1];
+    final int[] longestPath = new int[MAX_VERTICES + 1];
+    final int[] currentPath = new int[MAX_VERTICES + 1];
+
+    private int vertices, edges;
+
     void solve() throws NumberFormatException, IOException {
         vertices = nextInt();
         edges = nextInt();
         readAdjacencyList();
-        startVertices[0] = vertices;
-        while (startVertices[0] > 1 && neededLength < vertices) {
-            neededLength++;
-            for (int i = 1; i <= vertices; i++) {
-                if (startVertices[i] != 0) {
-                    continue;
-                }
-                if (dfs(i, 0)) {
-                    longestPath[0] = neededLength;
-                    break;
-                }
-            }
+        for (int i = 1; i <= vertices; i++) {
+            dfs(i, 1);
         }
-        out.println(longestPath[0]);
-        for (int i = 1; i <= longestPath[0] + 1; i++) {
+        out.println(longestPath[0] - 1);
+        for (int i = 1; i <= longestPath[0]; i++) {
             out.print(longestPath[i] + " ");
         }
     }
 
-    private boolean dfs(int vertex, int length) {
-        if (length == neededLength) {
-            if (startVertices[vertex] == 0) {
-                startVertices[0]--;
-                startVertices[vertex] = 1;
-            }
-            longestPath[length + 1] = vertex;
-            return true;
+    private void dfs(int vertex, int length) {
+        colorVertex[vertex] = true;
+        currentPath[length] = vertex;
+        currentPath[0] = length;
+        int aVertices = F(vertex);
+        Arrays.fill(color1, false);
+        if (length - 1 + aVertices < longestPath[0]) {
+            return;
         }
-        colorVertex[vertex] = 1;
-        int index = vertex;
+        int index = vertex, count = 0;
         while (adjacency[1][index] != 0) {
             index = adjacency[1][index];
-            if (colorVertex[adjacency[0][index]] == 0) {
-                if (dfs(adjacency[0][index], length + 1) == true) {
-                    longestPath[length + 1] = vertex;
-                    colorVertex[vertex] = 0;
-                    return true;
+            if (!colorVertex[adjacency[0][index]]) {
+                dfs(adjacency[0][index], length + 1);
+            } else {
+                count++;
+            }
+
+        }
+        if (index == vertex || count == adjacency[3][vertex]) {
+            if (currentPath[0] > longestPath[0]) {
+                int i = 1;
+                while (currentPath[i] == longestPath[i]) {
+                    i++;
                 }
+                for (; i <= currentPath[0]; i++) {
+                    longestPath[i] = currentPath[i];
+                }
+                longestPath[0] = currentPath[0];
             }
         }
-        if (startVertices[vertex] == 0) {
-            startVertices[0]--;
-            startVertices[vertex] = 1;
-        }
-        colorVertex[vertex] = 0;
-        return false;
+        colorVertex[vertex] = false;
     }
 
     void readAdjacencyList() throws NumberFormatException, IOException {
@@ -120,9 +113,24 @@ public class Path implements Runnable {
         for (int i = vertices + 1; i <= vertices + edges; i++) {
             from = nextInt();
             to = nextInt();
+            adjacency[0][i] = to;
             adjacency[1][adjacency[2][from]] = i;
             adjacency[2][from] = i;
-            adjacency[0][i] = to;
+            adjacency[3][from]++;
         }
+    }
+
+    private int F(int vertex) {
+        color1[vertex] = true;
+        int result = 0;
+        int index = vertex;
+        while (adjacency[1][index] != 0) {
+            index = adjacency[1][index];
+            if (!colorVertex[adjacency[0][index]] && !color1[adjacency[0][index]]) {
+                result += F(adjacency[0][index]);
+                result++;
+            }
+        }
+        return result;
     }
 }
