@@ -11,6 +11,15 @@ public class Path implements Runnable {
     final int MAX_VERTICES = 22;
     final int MAX_EDGES = 1000;
 
+    final int[][] adjacency = new int[3][MAX_VERTICES + MAX_EDGES + 1];
+    final int[] colorVertex = new int[MAX_VERTICES + 1];
+    final int[] longestPath = new int[MAX_VERTICES + 1];
+    final int[] currentPath = new int[MAX_VERTICES + 1];
+
+    final boolean[] color1 = new boolean[MAX_VERTICES + 1];
+
+    static int vertices, edges;
+
     public static void main(String[] args) {
         new Thread(new Path()).start();
     }
@@ -48,14 +57,6 @@ public class Path implements Runnable {
         return Double.parseDouble(nextToken());
     }
 
-    final int[][] adjacency = new int[4][MAX_VERTICES + MAX_EDGES + 1];
-    final boolean[] colorVertex = new boolean[MAX_VERTICES + 1];
-    final boolean[] color1 = new boolean[MAX_VERTICES + 1];
-    final int[] longestPath = new int[MAX_VERTICES + 1];
-    final int[] currentPath = new int[MAX_VERTICES + 1];
-
-    private int vertices, edges;
-
     void solve() throws NumberFormatException, IOException {
         vertices = nextInt();
         edges = nextInt();
@@ -70,37 +71,42 @@ public class Path implements Runnable {
     }
 
     private void dfs(int vertex, int length) {
-        colorVertex[vertex] = true;
+        colorVertex[vertex] = 1;
         currentPath[length] = vertex;
-        currentPath[0] = length;
         int aVertices = F(vertex);
         Arrays.fill(color1, false);
         if (length - 1 + aVertices < longestPath[0]) {
+            colorVertex[vertex] = 0;
             return;
         }
-        int index = vertex, count = 0;
+        int index = vertex;
         while (adjacency[1][index] != 0) {
             index = adjacency[1][index];
-            if (!colorVertex[adjacency[0][index]]) {
+            if (colorVertex[adjacency[0][index]] == 0) {
                 dfs(adjacency[0][index], length + 1);
-            } else {
-                count++;
             }
+        }
+        if (longestPath[0] < length) {
+            for (int i = 1; i <= length; i++) {
+                longestPath[i] = currentPath[i];
+            }
+            longestPath[0] = length;
+        }
+        colorVertex[vertex] = 0;
+    }
 
-        }
-        if (index == vertex || count == adjacency[3][vertex]) {
-            if (currentPath[0] > longestPath[0]) {
-                int i = 1;
-                while (currentPath[i] == longestPath[i]) {
-                    i++;
-                }
-                for (; i <= currentPath[0]; i++) {
-                    longestPath[i] = currentPath[i];
-                }
-                longestPath[0] = currentPath[0];
+    private int F(int vertex) {
+        color1[vertex] = true;
+        int result = 0;
+        int index = vertex;
+        while (adjacency[1][index] != 0) {
+            index = adjacency[1][index];
+            if (colorVertex[adjacency[0][index]] != 1 && !color1[adjacency[0][index]]) {
+                result += F(adjacency[0][index]);
+                result++;
             }
         }
-        colorVertex[vertex] = false;
+        return result;
     }
 
     void readAdjacencyList() throws NumberFormatException, IOException {
@@ -113,24 +119,9 @@ public class Path implements Runnable {
         for (int i = vertices + 1; i <= vertices + edges; i++) {
             from = nextInt();
             to = nextInt();
-            adjacency[0][i] = to;
             adjacency[1][adjacency[2][from]] = i;
             adjacency[2][from] = i;
-            adjacency[3][from]++;
+            adjacency[0][i] = to;
         }
-    }
-
-    private int F(int vertex) {
-        color1[vertex] = true;
-        int result = 0;
-        int index = vertex;
-        while (adjacency[1][index] != 0) {
-            index = adjacency[1][index];
-            if (!colorVertex[adjacency[0][index]] && !color1[adjacency[0][index]]) {
-                result += F(adjacency[0][index]);
-                result++;
-            }
-        }
-        return result;
     }
 }
