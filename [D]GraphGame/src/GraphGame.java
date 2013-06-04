@@ -110,7 +110,7 @@ public class GraphGame implements Runnable {
     }
 
     void readAdjacencyList() throws NumberFormatException, IOException {
-        int from, to, moreThanOneEdgeCounter = 0;
+        int from, to;
         for (int i = 1; i <= vertices + edges; i++) {
             adjacency[0][i] = i;
             adjacency[1][i] = 0;
