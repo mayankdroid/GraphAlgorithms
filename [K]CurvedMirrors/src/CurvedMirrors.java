@@ -1,4 +1,5 @@
 import java.io.*;
+import java.util.HashMap;
 import java.util.StringTokenizer;
 
 
@@ -7,9 +8,15 @@ public class CurvedMirrors implements Runnable {
     BufferedReader in;
     PrintWriter out;
 
+    final int MAX_BALCONY = 30;
+    final int MAX_DAMAGE = 30 * 100;
+
     private int balcony;
-    private int[] balconyState = new int[31];
+    private final int[] balconyState = new int[MAX_BALCONY];
+    private final int[] sortState = new int[MAX_BALCONY];
     private int monstersCount = 0;
+
+    private final HashMap<Integer, Integer> savedStates = new HashMap<Integer, Integer>();
 
     public static void main(String[] args) {
         new Thread(new CurvedMirrors()).start();
@@ -49,39 +56,109 @@ public class CurvedMirrors implements Runnable {
     }
 
     void solve() throws NumberFormatException, IOException {
+        long startTime = System.currentTimeMillis();
         balcony = nextInt();
-        for (int i = 1; i <= balcony; i++) {
+        for (int i = 0; i < balcony; i++) {
             balconyState[i] = nextInt();
             monstersCount += balconyState[i];
         }
-        out.print(processState(balconyState));
+        int minRes = Integer.MAX_VALUE;
+        minRes = Math.min(minRes, processState(12));
+        out.print(minRes);
     }
 
-    private int processState(int[] balconyState) {
-        if (monstersCount == 0) return 0;
-        int killedMonsters, maxKilledMonsters = balconyState[balcony] + balconyState[1] + balconyState[2];
-        int[] shot = new int[]{balcony, 1, 2};
-        for (int i = 2; i < balcony; i++) {
-            killedMonsters = balconyState[i - 1] + balconyState[i] + balconyState[i + 1];
-            if (maxKilledMonsters < killedMonsters) {
-                maxKilledMonsters = killedMonsters;
-                shot[0] = i - 1;
-                shot[1] = i;
-                shot[2] = i + 1;
+    private int processState(int depth) {
+        if (depth == 0) {
+            return MAX_DAMAGE;
+        }
+        int killedMonsters, left, center, right;
+        int currentDamage, minDamage = Integer.MAX_VALUE;
+        int enterHash = getCurrentHash();
+
+        for (int i = 0; i < balcony; i++) {
+            int a = (i + balcony - 1) % balcony, b = i % balcony, c = (i + 1) % balcony;
+            left = balconyState[a];
+            center = balconyState[b];
+            right = balconyState[c];
+            killedMonsters = left + center + right;
+            if (center == 0) continue;
+            balconyState[a] = 0;
+            balconyState[b] = 0;
+            balconyState[c] = 0;
+            monstersCount -= killedMonsters;
+
+            if (monstersCount != 0) {
+                int currentHash = getCurrentHash();
+                if (savedStates.containsKey(currentHash)) {
+                    currentDamage = monstersCount + savedStates.get(currentHash);
+                } else {
+                    if (minDamage < monstersCount + F()) {
+                        currentDamage = minDamage;
+                    } else {
+                        currentDamage = monstersCount + processState(depth - 1);
+                    }
+                }
+            } else {
+                minDamage = 0;
+                balconyState[a] = left;
+                balconyState[b] = center;
+                balconyState[c] = right;
+                monstersCount += killedMonsters;
+                break;
+            }
+            if (minDamage > currentDamage) {
+                minDamage = currentDamage;
+            }
+            balconyState[a] = left;
+            balconyState[b] = center;
+            balconyState[c] = right;
+            monstersCount += killedMonsters;
+        }
+        savedStates.put(enterHash, minDamage);
+        return minDamage;
+    }
+
+    private int F() {
+        int j, result = 0;
+        for (j = 0; j < balcony; j++) {
+            sortState[j] = balconyState[j];
+        }
+        quickSort(sortState, 0, balcony - 1);
+        for (j = balcony - 4; j > 1; j -= 3) {
+            for (int k = j; k > -1; k--) {
+                if (sortState[k] == 0) break;
+                result += sortState[k];
             }
         }
-        killedMonsters = balconyState[balcony - 1] + balconyState[balcony] + balconyState[1];
-        if (maxKilledMonsters < killedMonsters) {
-            maxKilledMonsters = killedMonsters;
-            shot[0] = balcony - 1;
-            shot[1] = balcony;
-            shot[2] = 1;
+        return result;
+    }
+
+    private Integer getCurrentHash() {
+        int seed = 131313;
+        int hash = 0;
+        for (int i = 0; i < balcony; i++) {
+            hash = (hash * seed) + balconyState[i] + i;
         }
-        balconyState[shot[0]] = 0;
-        balconyState[shot[1]] = 0;
-        balconyState[shot[2]] = 0;
-        monstersCount -= maxKilledMonsters;
-        int damage = monstersCount;
-        return damage + processState(balconyState);
+        return hash;
+    }
+
+    private int[] quickSort(int[] targetArray, int low, int high) {
+        int i = low;
+        int j = high;
+        int x = targetArray[(low + high) / 2];
+        do {
+            while (targetArray[i] < x) ++i;
+            while (targetArray[j] > x) --j;
+            if (i <= j) {
+                int temp = targetArray[i];
+                targetArray[i] = targetArray[j];
+                targetArray[j] = temp;
+                i++;
+                j--;
+            }
+        } while (i < j);
+        if (low < j) quickSort(targetArray, low, j);
+        if (i < high) quickSort(targetArray, i, high);
+        return targetArray;
     }
 }
