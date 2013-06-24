@@ -9,7 +9,7 @@ public class CurvedMirrors implements Runnable {
     PrintWriter out;
 
     final int MAX_BALCONY = 30;
-    final int MAX_DAMAGE = 30 * 100;
+    static long startTime, currentTime;
 
     private int balcony;
     private final int[] balconyState = new int[MAX_BALCONY];
@@ -19,6 +19,7 @@ public class CurvedMirrors implements Runnable {
     private final HashMap<Integer, Integer> savedStates = new HashMap<Integer, Integer>();
 
     public static void main(String[] args) {
+        startTime = System.currentTimeMillis();
         new Thread(new CurvedMirrors()).start();
     }
 
@@ -56,21 +57,16 @@ public class CurvedMirrors implements Runnable {
     }
 
     void solve() throws NumberFormatException, IOException {
-        long startTime = System.currentTimeMillis();
         balcony = nextInt();
         for (int i = 0; i < balcony; i++) {
             balconyState[i] = nextInt();
             monstersCount += balconyState[i];
         }
-        int minRes = Integer.MAX_VALUE;
-        minRes = Math.min(minRes, processState(12));
-        out.print(minRes);
+        out.print(processState());
+        // out.print(System.currentTimeMillis() - startTime);
     }
 
-    private int processState(int depth) {
-        if (depth == 0) {
-            return MAX_DAMAGE;
-        }
+    private int processState() {
         int killedMonsters, left, center, right;
         int currentDamage, minDamage = Integer.MAX_VALUE;
         int enterHash = getCurrentHash();
@@ -95,7 +91,7 @@ public class CurvedMirrors implements Runnable {
                     if (minDamage < monstersCount + F()) {
                         currentDamage = minDamage;
                     } else {
-                        currentDamage = monstersCount + processState(depth - 1);
+                        currentDamage = monstersCount + processState();
                     }
                 }
             } else {
@@ -109,6 +105,8 @@ public class CurvedMirrors implements Runnable {
             if (minDamage > currentDamage) {
                 minDamage = currentDamage;
             }
+            currentTime = System.currentTimeMillis();
+            if (currentTime - startTime > 400) return minDamage;
             balconyState[a] = left;
             balconyState[b] = center;
             balconyState[c] = right;
@@ -125,10 +123,10 @@ public class CurvedMirrors implements Runnable {
         }
         quickSort(sortState, 0, balcony - 1);
         for (j = balcony - 4; j > 1; j -= 3) {
-            for (int k = j; k > -1; k--) {
-                if (sortState[k] == 0) break;
-                result += sortState[k];
-            }
+            if (sortState[j] == 0) break;
+            result += sortState[j];
+            result += sortState[j - 1];
+            result += sortState[j - 2];
         }
         return result;
     }
