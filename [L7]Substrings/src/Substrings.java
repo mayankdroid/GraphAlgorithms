@@ -55,14 +55,12 @@ public class Substrings implements Runnable {
 
     private int minLength = MAX_LENGTH;
     private int minWord = 0;
-    private HashMap<Long, String> base = new HashMap<Long, String>();
-
-    private LinkedList<Long> result = new LinkedList<Long>();
-    private LinkedList<Long> temp = new LinkedList<Long>();
+    private HashMap<Long, Integer> result = new HashMap<Long, Integer>();
+    private HashMap<Long, Integer> temp = new HashMap<Long, Integer>();
 
     void solve() throws NumberFormatException, IOException {
-        int words = nextInt();
-        String resSS = "";
+        int length = 0, words = nextInt();
+        int resSS = 0;
         degrees[0] = 1;
         for (int i = 0; i < words; i++) {
             strings[i] = nextToken();
@@ -73,28 +71,29 @@ public class Substrings implements Runnable {
             addStringPrefixHashes(i);
         }
         int curLength;
-        long hash;
+        long hash = 0, temp_hash;
         int a = 0, b = minLength;
         while (true) {
             if (b == a) break;
             curLength = (b + a + 1) / 2;
             int j = 0, i;
             for (i = 0; i < minLength - curLength + 1; i++) {
-                String subStr = strings[minWord].substring(i, i + curLength);
                 hash = getHash(minWord, i, i + curLength);
-                base.put(hash, subStr);
-                result.add(hash);
+                result.put(hash, i);
             }
             for (j = 0; j < words; j++) {
                 if (j == minWord) continue;
                 for (i = 0; i < strings[j].length() - curLength + 1; i++) {
                     hash = getHash(j, i, i + curLength);
-                    temp.add(hash);
+                    temp.put(hash, i);
                 }
-                Iterator index = result.iterator();
+                Iterator index = result.keySet().iterator();
                 while (index.hasNext()) {
-                    if (!temp.contains(index.next())) {
+                    temp_hash = (Long) index.next();
+                    if (!temp.containsKey(temp_hash)) {
                         index.remove();
+                    } else {
+                        hash = temp_hash;
                     }
                 }
                 if (result.isEmpty()) {
@@ -105,13 +104,13 @@ public class Substrings implements Runnable {
 
             if (j == words) {
                 a = curLength;
-                resSS = base.get(result.getFirst());
+                resSS = result.get(hash);
             } else {
                 b = curLength - 1;
             }
             result.clear();
         }
-        out.print(resSS);
+        out.print(strings[minWord].substring(resSS, resSS + a));
     }
 
     private void addStringPrefixHashes(int word) {
